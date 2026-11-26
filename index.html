@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SSEE con pocos usuarios · Ítems PAE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="loading" id="loading">Cargando listados de servicios educativos…</div>
+
+<header class="top" id="top">
+  <div class="in">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1B64BE"/><path d="M8 24 L14 11 L21 15 L26 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><circle cx="8" cy="24" r="2.6" fill="#EE7FAC"/><circle cx="14" cy="11" r="2.6" fill="#00B894"/><circle cx="21" cy="15" r="2.6" fill="#F2A600"/><circle cx="26" cy="9" r="2.6" fill="#fff"/></svg>
+      <div><b>Servicios con pocos usuarios en los ítems del PAE</b><small>PAE · UDPC · Subunidad de Innovación y Calidad</small></div>
+    </div>
+    <div class="seg" id="yr" role="group" aria-label="Periodo">
+      <button data-y="2026">II Tramo 2026</button><button data-y="2027" class="on">SAE 2027</button>
+    </div>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#mapa">Mapa</a><a href="#tipologia">Tipología</a><a href="#items">Ítems</a><a href="#servicios">Servicios</a>
+    </nav>
+    <button class="btn" id="present" title="Mapa a pantalla completa (Esc para salir)">▶ Presentar</button>
+  </div>
+</header>
+
+<section class="ctl" id="ctl" aria-label="Parámetros del análisis">
+  <div class="in">
+    <div class="fld"><span>Usuarios por servicio educativo</span>
+      <div class="seg" id="nseg"><button data-n="1" class="on">1</button><button data-n="2">2</button><button data-n="3">3</button><button data-n="5">5</button><button data-n="10">10</button></div>
+    </div>
+    <div class="fld"><span>Criterio</span>
+      <select id="mode"><option value="eq">Exactamente N usuarios</option><option value="le">Hasta N usuarios</option></select>
+    </div>
+    <div class="fld"><span>Distancia tipo B (hasta)</span>
+      <div class="rng"><input type="range" id="kb" min="0.5" max="5" step="0.5" value="2"><output id="kbo">2 km</output></div>
+    </div>
+    <div class="fld"><span>Distancia tipo C (hasta)</span>
+      <div class="rng"><input type="range" id="kc" min="2" max="20" step="1" value="5"><output id="kco">5 km</output></div>
+    </div>
+    <div class="fld"><span>Unidad territorial</span><select id="fut"></select></div>
+    <div class="fld"><span>Departamento</span><select id="fdep"></select></div>
+    <div class="fld"><span>Forma de atención</span><select id="ffo"></select></div>
+    <div class="fld"><span>D.S. N° 149-2026-PCM</span><select id="fds"><option value="">Todos</option><option value="1">En distritos del D.S.</option><option value="0">Fuera del D.S.</option></select></div>
+    <div class="fld"><span>Nivel FONDES</span><select id="ffon"></select></div>
+    <button class="btn" id="reset">Restablecer</button>
+  </div>
+</section>
+
+<section class="band hero">
+  <div class="in">
+    <h1 id="title">Calculando…</h1>
+    <p class="lead" id="sub"></p>
+    <div class="kpis" id="kpis"></div>
+    <div class="tbar" id="tbar" aria-label="Distribución por tipo"></div>
+    <div class="tleg" id="tleg"></div>
+  </div>
+</section>
+
+<section class="mapsec" id="mapa" aria-label="Mapa de ítems">
+  <div class="mapwrap" id="mapwrap">
+    <canvas id="map" aria-label="Mapa interactivo de ítems y servicios educativos"></canvas>
+    <div class="mtools">
+      <button id="zin" title="Acercar" aria-label="Acercar">+</button>
+      <button id="zout" title="Alejar" aria-label="Alejar">−</button>
+      <button id="zfit" title="Ver todo el ámbito" aria-label="Ver todo">⤢</button>
+      <button id="tour" title="Recorrido por los ítems con más casos" aria-label="Recorrido">▶</button>
+    </div>
+    <div class="pkpi" id="pkpi"></div>
+    <div class="tourbar" id="tourbar"></div>
+    <details class="layers">
+      <summary>Capas del mapa</summary>
+      <label for="geo" class="muted" style="padding:0">Minimum Bounding Geometry del ítem</label>
+      <select id="geo">
+        <option value="hull">Envolvente convexa (convex hull)</option>
+        <option value="rect">Rectángulo de menor área</option>
+        <option value="env">Envolvente rectangular (envelope)</option>
+        <option value="circ">Círculo mínimo</option>
+      </select>
+      <label><input type="checkbox" id="lyrItems" checked> MBG de los ítems con casos</label>
+      <label><input type="checkbox" id="lyrCore" checked> MBG del ítem sin los casos</label>
+      <label><input type="checkbox" id="lyrLines" checked> Enlace al SSEE más cercano</label>
+      <label><input type="checkbox" id="lyrBg" checked> Red de SSEE del listado</label>
+      <label for="base" class="muted" style="padding:6px 0 0">Mapa base</label>
+      <select id="base">
+        <option value="none">Sin mapa base</option>
+        <option value="carto">Claro (CARTO · OSM)</option>
+        <option value="osm">OpenStreetMap</option>
+        <option value="topo">Topográfico (OpenTopoMap)</option>
+        <option value="sat">Satélite (Esri)</option>
+      </select>
+    </details>
+    <div class="legend" id="legend"></div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="mapnote" id="mapnote"></div>
+  </div>
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+</section>
+
+<section class="band" id="tipologia">
+  <div class="in">
+    <h2>Tipología logística y alternativa de atención</h2>
+    <p class="lead">Cada servicio se clasifica según su cercanía a otro servicio del mismo ítem. Haz clic en una tarjeta para ver solo ese tipo en el mapa y en las tablas.</p>
+    <div class="cards" id="cards"></div>
+  </div>
+</section>
+
+<section class="band" id="graficos" style="padding-top:0">
+  <div class="in grid2">
+    <div class="box">
+      <h3>Servicios educativos según número de usuarios</h3>
+      <p class="small muted">Con los filtros aplicados. Haz clic en una barra para analizar ese número de usuarios.</p>
+      <div class="cols" id="chN"></div>
+    </div>
+    <div class="box">
+      <h3>Casos por unidad territorial y tipo</h3>
+      <p class="small muted">Las 14 unidades territoriales con más casos. Haz clic para filtrar.</p>
+      <div id="chUT"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="items" style="padding-top:0">
+  <div class="in">
+    <h2>Ítems que contienen estos servicios</h2>
+    <p class="lead">El área es la de la Minimum Bounding Geometry elegida, con todos los servicios del ítem y sin los casos analizados. Una reducción grande indica que los casos alargan la ruta del proveedor.</p>
+    <div class="tools"><input id="iq" type="search" placeholder="Buscar ítem, comité o unidad territorial" autocomplete="off"><button class="btn" id="icsv">Descargar CSV</button><button class="btn" id="icopy">Copiar</button></div>
+    <div class="scroll"><table id="itab"></table></div>
+    <button class="btn more" id="imore">Mostrar más</button>
+  </div>
+</section>
+
+<section class="band" id="servicios" style="padding-top:0">
+  <div class="in">
+    <h2>Detalle de servicios educativos</h2>
+    <p class="lead">Servicio más cercano del mismo ítem y distancia en línea recta. Haz clic en una fila para ubicarlo en el mapa.</p>
+    <div class="tools"><input id="sq" type="search" placeholder="Buscar por código modular, nombre, distrito o ítem" autocomplete="off"><button class="btn" id="scsv">Descargar CSV</button><button class="btn" id="scopy">Copiar</button></div>
+    <div class="scroll"><table id="stab"></table></div>
+    <button class="btn more" id="smore">Mostrar más</button>
+  </div>
+</section>
+
+<footer class="band">
+  <div class="in grid2" style="margin:0">
+    <div>
+      <h3>Metodología</h3>
+      <ul>
+        <li>Ítem identificado por la llave única comité de compra + nombre del ítem (706 ítems en el SAE 2027 y 711 en el II Tramo 2026). Los servicios de transferencia (TSE) no tienen ítem.</li>
+        <li>Tipo A: comparte código de local con otro servicio del listado. Tipos B, C y D: distancia en línea recta al servicio más cercano del mismo ítem, con los umbrales elegidos. Sin coordenadas o sin ítem: tipo D, por verificar.</li>
+        <li>Minimum Bounding Geometry calculada sobre las coordenadas de todos los servicios del ítem; áreas en km² con proyección local.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Fuentes</h3>
+      <ul>
+        <li>Listado de IIEE para el Proceso de Compras 2027 (SAE).</li>
+        <li>Listado de IIEE del II Tramo 2026 (06/11/2026); comité e ítem del consolidado 2026; coordenadas del listado 2027.</li>
+        <li>D.S. N° 149-2026-PCM y relación de distritos FONDES (SIGRID, 05/11/2026).</li>
+      </ul>
+      <p style="margin-top:10px">Elaboración: PAE – UDPC – SIC. Mapa base © OpenStreetMap, CARTO, OpenTopoMap, Esri, cuando está disponible.</p>
+    </div>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="data/ubigeo.js"></script>
+<script src="data/2026.js"></script>
+<script src="data/2027.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
