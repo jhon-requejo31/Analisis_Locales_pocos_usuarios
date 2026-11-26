@@ -1,1 +1,0 @@
-(window.SAE_POI=window.SAE_POI||{}).mer={"titulo":"Mercados","fecha":"Pendiente: generar con colab_mercados_bn_osm.py","cats":["Mercado de abastos","Mercado mayorista","Feria","Supermercado o hipermercado","Bodega o tienda de alimentos"],"rows":[]};
